@@ -10,11 +10,11 @@ export interface CustomResponseInterface {
   data: OneServerDataType | MultipleServersDataType
 }
 
-interface OneServerDataType {
+export interface OneServerDataType {
   server: ServerDataType
 }
 
-interface MultipleServersDataType {
+export interface MultipleServersDataType {
   servers: ServerDataType[]
 }
 
