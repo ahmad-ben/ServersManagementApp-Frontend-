@@ -98,7 +98,7 @@ export class AppComponent implements OnInit {
             appData: response
           }
         }),
-
+// The this.lastDataSub is who holds all the data, for give it to app State when he need it.
         startWith({
           dataState: AppDataStateEnum.LOADED_STATE,
           appData: this.lastDataSub.value as CustomResponseInterface
@@ -149,6 +149,40 @@ export class AppComponent implements OnInit {
       )
   }
 
+  deleteServer(serverId: string): void{
+    this.appState$ = this.serverService.delete$(serverId)
+    .pipe(
+      map(response => {
+          this.lastDataSub.next(
+            {
+              ...this.lastDataSub.value as CustomResponseInterface,
+              data: {
+                servers: ((this.lastDataSub.value as CustomResponseInterface)
+                  .data as MultipleServersDataType)
+                    .servers.filter(server => server.id !== serverId)
+              }
+            }
+
+          )
+          return {
+            dataState: AppDataStateEnum.LOADED_STATE,
+            appData: this.lastDataSub.value as CustomResponseInterface
+          }
+
+        }),
+
+        startWith({
+          dataState: AppDataStateEnum.LOADED_STATE,
+          appData: this.lastDataSub.value as CustomResponseInterface
+        }),
+
+        catchError((error: string) => {
+          this.currentPingedIpSub.next('');
+          return of({ dataState: AppDataStateEnum.ERROR_STATE, error })
+        })
+
+      )
+  }
 
 }
 
