@@ -184,6 +184,22 @@ export class AppComponent implements OnInit {
       )
   }
 
+  printReport(): void{
+    // print feature:
+    // window.print();
+
+    // extends the table to the excel:
+    const dataType: string  = 'application/vnd.ms-excel.sheet.macroEnabled.12';
+    const serversTableElem = document.getElementById("serversTable");
+    const tableHtml = serversTableElem?.outerHTML.replace(/ /g, '%20');
+    const downloadLink = document.createElement('a');
+    document.body.appendChild(downloadLink);
+    downloadLink.href = `data: ${dataType}, ${tableHtml}`;
+    downloadLink.download = 'servers-report.xls';
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  }
+
 }
 
 

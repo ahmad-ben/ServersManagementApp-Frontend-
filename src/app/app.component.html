@@ -15,7 +15,7 @@
 
           <div class="col-sm-6">
 
-            <button  type="button" class="btn btn-primary">Print Report</button>
+            <button (click)="printReport()" type="button" class="btn btn-primary">Print Report</button>
 
             <a href="#addEmployeeModal" class="btn btn-success" data-toggle="modal">
               <i class="material-icons">&#xE147;</i>
@@ -54,7 +54,7 @@
 
         <ng-container *ngSwitchCase="appDataStateEnumVar.LOADED_STATE">
 
-          <table class="table table-striped table-hover" id="servers">
+          <table class="table table-striped table-hover" id="serversTable">
 
             <thead>
 
