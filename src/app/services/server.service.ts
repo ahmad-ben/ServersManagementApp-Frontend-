@@ -39,14 +39,14 @@ export class ServerService {
   <Observable<CustomResponseInterface>>
     new Observable<CustomResponseInterface>(
       ourSubscriber => {
-        console.log(response);
         ourSubscriber.next(
           searchStatus === SearchStatusEnum.ALL ?
           { ...response, message: `Servers filtered by ${searchStatus} status.` } :
           {
             ...response,
+
             message: (response.data as MultipleServersDataType).servers.filter(
-              (serverData) => serverData.status == searchStatus as string
+              (serverData) => serverData.serverStatus == searchStatus as string
             ).length > 0 ?
               `Servers filtered by ${searchStatus === SearchStatusEnum.SERVER_UP ?
                 'SERVER UP' :
@@ -57,12 +57,13 @@ export class ServerService {
                 'SERVER UP' :
                 'SERVER DOWN'
               } found.`,
+
               data : {
-                servers: (response.data as MultipleServersDataType)
-                .servers.filter(
-                  (serverData) => serverData.status == searchStatus as string
+                servers: (response.data as MultipleServersDataType).servers.filter(
+                  (serverData) => serverData.serverStatus == searchStatus as string
                 )
               }
+
           }
         )
         ourSubscriber.complete(); //Refactor this and record it.
@@ -78,7 +79,6 @@ export class ServerService {
       );
 
   private handleError(error: HttpErrorResponse): Observable<never>{
-    console.log(error);
     return throwError (() =>
       new Error (`An error occurred: ${error.status}`)
     );

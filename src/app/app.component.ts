@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, Observable, catchError, map, of, startWith } from 'rxjs';
 import { AppDataStateEnum } from './enums/appStateData.enum';
+import { SearchStatusEnum } from './enums/searchStatus.enum';
 import { ServerStatusEnum } from './enums/serverStatus.enum';
 import { AppStateInterface } from './interfaces/appState.interface';
 import { CustomResponseInterface, MultipleServersDataType, OneServerDataType } from './interfaces/customResponse.interface';
@@ -10,7 +12,10 @@ import { ServerService } from './services/server.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -26,8 +31,6 @@ export class AppComponent implements OnInit {
   serverService = inject(ServerService);
 
   ngOnInit(){
-    console.log('The first enum to property', this.appDataStateEnumVar);
-    console.log('The first enum to property', this.serverStatusEnumVar);
     this.appState$ = this.serverService.servers$
       .pipe(
         map(response => {
@@ -77,18 +80,31 @@ export class AppComponent implements OnInit {
       )
   }
 
+  filterServers(searchStatusEnum: SearchStatusEnum): void{
+    this.appState$ = this.serverService.filter$
+      (searchStatusEnum, this.lastDataSub.value as CustomResponseInterface)
+    .pipe(
+        map(response => {
+          return {
+            dataState: AppDataStateEnum.LOADED_STATE,
+            appData: response
+          }
+        }),
 
+        startWith({
+          dataState: AppDataStateEnum.LOADED_STATE,
+          appData: this.lastDataSub.value as CustomResponseInterface
+        }),
 
+        catchError((error: string) => {
+          return of({ dataState: AppDataStateEnum.ERROR_STATE, error });
+        })
 
-/*
+      )
+  }
 
-get the whole array with the previous values. search on the wanted server
-and extract it to change its value from the new response use the index
-in the previous array itself.
-after override the previous value, put it a
-
-
-*/
 
 }
+
+
 //========================================================================

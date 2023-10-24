@@ -7,5 +7,5 @@ export interface ServerDataType {
   memory: string;
   type: string;
   imageUrl: string;
-  status: ServerStatusEnum
+  serverStatus: ServerStatusEnum
 }
