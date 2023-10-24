@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { BehaviorSubject, Observable, catchError, map, of, startWith } from 'rxjs';
 import { AppDataStateEnum } from './enums/appStateData.enum';
 import { SearchStatusEnum } from './enums/searchStatus.enum';
@@ -27,6 +27,9 @@ export class AppComponent implements OnInit {
   private currentPingedIpSub = new BehaviorSubject<string>("");
   currentPingedIpObs$ = this.currentPingedIpSub.asObservable();
   private lastDataSub = new BehaviorSubject<CustomResponseInterface | null>(null);
+  private serverIsSavingSub = new BehaviorSubject<boolean>(false);
+  //Two cases is enough to use boolean not like a lot of servers you should then pass the exact value
+  serverIsSavingObs$ = this.serverIsSavingSub.asObservable();
 
   serverService = inject(ServerService);
 
@@ -36,7 +39,12 @@ export class AppComponent implements OnInit {
         map(response => {
           this.lastDataSub.next(response);
           return {
-            dataState: AppDataStateEnum.LOADED_STATE, appData: response
+            dataState: AppDataStateEnum.LOADED_STATE,
+            appData: {
+              ...response, data: {
+                servers: (response.data as MultipleServersDataType).servers.reverse()
+              }
+            }
           }
         }),
 
@@ -82,7 +90,7 @@ export class AppComponent implements OnInit {
 
   filterServers(searchStatusEnum: SearchStatusEnum): void{
     this.appState$ = this.serverService.filter$
-      (searchStatusEnum, this.lastDataSub.value as CustomResponseInterface)
+    (searchStatusEnum, this.lastDataSub.value as CustomResponseInterface)
     .pipe(
         map(response => {
           return {
@@ -97,6 +105,44 @@ export class AppComponent implements OnInit {
         }),
 
         catchError((error: string) => {
+          return of({ dataState: AppDataStateEnum.ERROR_STATE, error });
+        })
+
+      )
+    }
+
+    saveServer(serverForm: NgForm): void{
+    this.serverIsSavingSub.next(true);
+    this.appState$ = this.serverService.save$
+    (serverForm.value)
+    .pipe(
+      map(response => {
+        this.lastDataSub.next(
+          {
+              ...response, data: {
+                servers: [
+                  (response.data as OneServerDataType).server,
+                  ...((this.lastDataSub.value?.data as MultipleServersDataType).servers)
+                ]
+              }
+            }
+            );
+            this.serverIsSavingSub.next(false);
+            document.getElementById('closeModal')?.click();
+            serverForm.resetForm({ serverStatus: this.serverStatusEnumVar.SERVER_DOWN })
+            return {
+              dataState: AppDataStateEnum.LOADED_STATE,
+              appData: this.lastDataSub.value as CustomResponseInterface
+            }
+          }),
+
+          startWith({
+            dataState: AppDataStateEnum.LOADED_STATE,
+            appData: this.lastDataSub.value as CustomResponseInterface
+          }),
+
+          catchError((error: string) => {
+          this.serverIsSavingSub.next(false);
           return of({ dataState: AppDataStateEnum.ERROR_STATE, error });
         })
 

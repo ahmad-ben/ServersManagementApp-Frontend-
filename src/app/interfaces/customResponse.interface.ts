@@ -8,6 +8,7 @@ export interface CustomResponseInterface {
   message: string;
   developerMessage: string;
   data: OneServerDataType | MultipleServersDataType
+  //change this to server oe servers later it caused a lot of work
 }
 
 export interface OneServerDataType {

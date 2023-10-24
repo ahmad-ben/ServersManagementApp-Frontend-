@@ -138,7 +138,7 @@
 
     <div class="modal-content">
 
-      <form #serverForm="">
+      <form #serverForm="ngForm" (ngSubmit)="saveServer(serverForm)">
 
         <div class="modal-header">
 
@@ -150,26 +150,26 @@
         <div class="modal-body">
 
           <div class="form-group">
-              <label>IP</label>
-              <input type="text" ngModel name="ipAddress" class="form-control" required>
+            <label>IP</label>
+            <input type="text" ngModel name="ipAddress" class="form-control" required>
           </div>
 
           <div class="form-group">
-              <label>Name</label>
-              <input type="text" ngModel name="name" class="form-control" required>
+            <label>Name</label>
+            <input type="text" ngModel name="name" class="form-control" required>
           </div>
 
           <div class="row">
               <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6">
                   <div class="form-group">
-                      <label>Memory</label>
-                      <input type="text" ngModel name="memory" class="form-control" required>
+                    <label>Memory</label>
+                    <input type="text" ngModel name="memory" class="form-control" required>
                   </div>
               </div>
               <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6">
                   <div class="form-group">
-                      <label>Type</label>
-                      <input type="text" ngModel name="type" class="form-control" required>
+                    <label>Type</label>
+                    <input type="text" ngModel name="type" class="form-control" required>
                   </div>
               </div>
           </div>
@@ -194,12 +194,13 @@
           </button>
 
           <button
+            [disabled]="serverForm.invalid || (serverIsSavingObs$ | async)"
             type="submit"
             class="btn btn-success"
           >
-            <i  class="fas fa-spinner fa-spin"></i>
-            <span >Saving...</span>
-            <span >Add</span>
+            <i *ngIf="serverIsSavingObs$ | async" class="fas fa-spinner fa-spin"></i>
+            <span *ngIf="serverIsSavingObs$ | async" >Saving...</span>
+            <span *ngIf="!(serverIsSavingObs$ | async)" >Add</span>
           </button>
 
         </div>
