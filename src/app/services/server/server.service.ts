@@ -2,9 +2,9 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { SearchStatusEnum } from '../enums/searchStatus.enum';
-import { CustomResponseInterface, MultipleServersDataType } from '../interfaces/customResponse.interface';
-import { ServerDataType } from '../interfaces/serverData.interface';
+import { SearchStatusEnum } from '../../enums/searchStatus.enum';
+import { CustomResponseInterface, MultipleServersDataType } from '../../interfaces/customResponse.interface';
+import { ServerDataType } from '../../interfaces/serverData.interface';
 
 @Injectable({
   providedIn: 'root'

@@ -1,23 +1,27 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import { NotifierModule, NotifierService } from 'angular-notifier';
 import { BehaviorSubject, Observable, catchError, map, of, startWith } from 'rxjs';
 import { AppDataStateEnum } from './enums/appStateData.enum';
+import { NotifierTypeEnum } from './enums/notifierType.enum';
 import { SearchStatusEnum } from './enums/searchStatus.enum';
 import { ServerStatusEnum } from './enums/serverStatus.enum';
 import { AppStateInterface } from './interfaces/appState.interface';
 import { CustomResponseInterface, MultipleServersDataType, OneServerDataType } from './interfaces/customResponse.interface';
-import { ServerService } from './services/server.service';
+import { ServerService } from './services/server/server.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    NotifierModule
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit {
   readonly appDataStateEnumVar = AppDataStateEnum;
@@ -32,11 +36,13 @@ export class AppComponent implements OnInit {
   serverIsSavingObs$ = this.serverIsSavingSub.asObservable();
 
   serverService = inject(ServerService);
+  notifierService = inject(NotifierService);
 
   ngOnInit(){
     this.appState$ = this.serverService.servers$
-      .pipe(
-        map(response => {
+    .pipe(
+      map(response => {
+          this.notifierService.notify(NotifierTypeEnum.DEFAULT, response.message);
           this.lastDataSub.next(response);
           return {
             dataState: AppDataStateEnum.LOADED_STATE,
@@ -51,11 +57,12 @@ export class AppComponent implements OnInit {
         startWith({ dataState: AppDataStateEnum.LOADING_STATE }),
 
         catchError((error: string) => {
+          this.notifierService.notify(NotifierTypeEnum.ERROR, error);
           return of({ dataState: AppDataStateEnum.ERROR_STATE, error })
         })
 
-      )
-  }
+        )
+      }
 
   pingServer(ipAddress: string): void{
     this.currentPingedIpSub.next(ipAddress);
@@ -68,7 +75,8 @@ export class AppComponent implements OnInit {
               (response.data as OneServerDataType).server.id
               )
             ] = (response.data as OneServerDataType).server; //TODO: Clean this later
-          this.currentPingedIpSub.next('');
+            this.notifierService.notify(NotifierTypeEnum.DEFAULT, response.message);
+            this.currentPingedIpSub.next('');
           return {
             dataState: AppDataStateEnum.LOADED_STATE,
             appData: this.lastDataSub.value as CustomResponseInterface
@@ -82,6 +90,7 @@ export class AppComponent implements OnInit {
 
         catchError((error: string) => {
           this.currentPingedIpSub.next('');
+          this.notifierService.notify(NotifierTypeEnum.ERROR, error);
           return of({ dataState: AppDataStateEnum.ERROR_STATE, error })
         })
 
@@ -93,6 +102,7 @@ export class AppComponent implements OnInit {
     (searchStatusEnum, this.lastDataSub.value as CustomResponseInterface)
     .pipe(
         map(response => {
+          this.notifierService.notify(NotifierTypeEnum.DEFAULT, response.message);
           return {
             dataState: AppDataStateEnum.LOADED_STATE,
             appData: response
@@ -105,6 +115,7 @@ export class AppComponent implements OnInit {
         }),
 
         catchError((error: string) => {
+          this.notifierService.notify(NotifierTypeEnum.ERROR, error);
           return of({ dataState: AppDataStateEnum.ERROR_STATE, error });
         })
 
@@ -130,6 +141,7 @@ export class AppComponent implements OnInit {
             this.serverIsSavingSub.next(false);
             document.getElementById('closeModal')?.click();
             serverForm.resetForm({ serverStatus: this.serverStatusEnumVar.SERVER_DOWN })
+            this.notifierService.notify(NotifierTypeEnum.DEFAULT, response.message);
             return {
               dataState: AppDataStateEnum.LOADED_STATE,
               appData: this.lastDataSub.value as CustomResponseInterface
@@ -142,6 +154,7 @@ export class AppComponent implements OnInit {
           }),
 
           catchError((error: string) => {
+          this.notifierService.notify(NotifierTypeEnum.ERROR, error);
           this.serverIsSavingSub.next(false);
           return of({ dataState: AppDataStateEnum.ERROR_STATE, error });
         })
@@ -164,6 +177,7 @@ export class AppComponent implements OnInit {
             }
 
           )
+          this.notifierService.notify(NotifierTypeEnum.DEFAULT, response.message);
           return {
             dataState: AppDataStateEnum.LOADED_STATE,
             appData: this.lastDataSub.value as CustomResponseInterface
@@ -177,6 +191,7 @@ export class AppComponent implements OnInit {
         }),
 
         catchError((error: string) => {
+          this.notifierService.notify(NotifierTypeEnum.ERROR, error);
           this.currentPingedIpSub.next('');
           return of({ dataState: AppDataStateEnum.ERROR_STATE, error })
         })
@@ -189,6 +204,7 @@ export class AppComponent implements OnInit {
     // window.print();
 
     // extends the table to the excel:
+    this.notifierService.notify(NotifierTypeEnum.DEFAULT ,'Report downloaded.');
     const dataType: string  = 'application/vnd.ms-excel.sheet.macroEnabled.12';
     const serversTableElem = document.getElementById("serversTable");
     const tableHtml = serversTableElem?.outerHTML.replace(/ /g, '%20');
@@ -204,3 +220,58 @@ export class AppComponent implements OnInit {
 
 
 //========================================================================
+
+
+
+
+
+
+
+
+
+/*
+TODO: 'check later'
+
+Library problem with the standalone apps in angular:
+
+export const customNotifierConfig: NotifierOptions = {
+  position: {
+    horizontal: {
+      position: 'left',
+      distance: 150
+    },
+    vertical: {
+      position: 'bottom',
+      distance: 12,
+      gap: 10
+    }
+  },
+  theme: 'material',
+  behaviour: {
+    autoHide: 3000,
+    onClick: 'hide',
+    onMouseover: 'pauseAutoHide',
+    showDismissButton: true,
+    stacking: 4
+  },
+  animations: {
+    enabled: true,
+    show: {
+      preset: 'slide',
+      speed: 300,
+      easing: 'ease'
+    },
+    hide: {
+      preset: 'fade',
+      speed: 300,
+      easing: 'ease',
+      offset: 50
+    },
+    shift: {
+      speed: 300,
+      easing: 'ease'
+    },
+    overlap: 150
+  }
+};
+*/
